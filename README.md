@@ -5,5 +5,5 @@
 ## Windows
 
 ```
-Hello world
+install python
 ```
