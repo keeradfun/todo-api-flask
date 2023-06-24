@@ -3,6 +3,7 @@ from flask_restful import reqparse, abort, Api, Resource
 from .validation import RegisterSchema,LoginSchema
 from marshmallow import ValidationError
 from .models import User
+from flask_jwt_extended import create_access_token
 
 class UserRegister(Resource):
     def post(self):
@@ -31,20 +32,27 @@ class UserLogin(Resource):
             if validated_data:
                 authenticate = User.authenticate_user(email=validated_data['email'],password=validated_data['password'])
                 if authenticate:
-                    print("its authenticated")
-                else:
-                    print("something went wrong")
-                return {
+                    access_token = create_access_token(identity=authenticate.id)
+                    return {
                         "status": 200,
-                        "message": validated_data,
+                        "data":{
+                            "token" : access_token
+                        } ,
                         "code": "OK"
                 }, 200
+                else:
+                    return {
+                    "status": 403,
+                    "message": "Forbidden",
+                    "code": "Forbidden"
+                }, 403
+               
             else:
                 return {
                     "status": 404,
                     "message": "Oops something went wrong",
                     "code": "OK"
-                }, 200
+                }, 404
         except ValidationError as err:
             return {
                         "status": 400,

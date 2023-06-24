@@ -63,9 +63,11 @@ class User(db.Model):
             user = User.query.filter_by(email = email).first()
             if user:
                 compare = password_compare(user.password,password)
-                return compare
+                if compare:
+                    return user
+                return None
             else:
-                return False
+                return None
             
         # except:
         #     return "Something went wrong while authencticating"
