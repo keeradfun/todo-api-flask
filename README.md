@@ -6,4 +6,8 @@
 
 ```
 install python
+python -m pip install virtualenv
+python -m venv env
+env/Scripts/activate.bat #to activate virtual env
+
 ```
