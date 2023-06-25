@@ -83,9 +83,9 @@ class User(db.Model):
 
     def update_password(id, password):
         try:
-            update = User.query.filter_by(id=id).update({
-                "password": hash_password(password)
-            })
+            update = User.query.filter_by(id=id).first()
+            update.password = hash_password(password)
+            db.session.commit()
             return "Success"
         except:
             return None

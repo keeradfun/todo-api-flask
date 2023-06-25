@@ -3,8 +3,9 @@ from flask_restful import reqparse, abort, Api, Resource
 from .validation import RegisterSchema, LoginSchema, NewPasswordSchema
 from marshmallow import ValidationError
 from .models import User
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required
 from .serializer import UserSchema
+from flask_jwt_extended import current_user
 
 
 class UserRegister(Resource):
@@ -38,7 +39,7 @@ class UserLogin(Resource):
                     email=validated_data['email'], password=validated_data['password'])
                 if authenticate:
                     access_token = create_access_token(
-                        identity=authenticate.id)
+                        identity=authenticate)
                     return {
                         "status": 200,
                         "data": {
@@ -68,10 +69,10 @@ class UserLogin(Resource):
 
 
 class UserManager(Resource):
-    def get(self, id):
-        user = User.get_user(id=id)
-        if user:
-            serialized_user = UserSchema().dump(user)
+    @jwt_required()
+    def get(self):
+        if current_user:
+            serialized_user = UserSchema().dump(current_user)
             return {
                 "status": 200,
                 "data": {
@@ -88,15 +89,16 @@ class UserManager(Resource):
 
 
 class PasswordUpdate(Resource):
-    def post(self, id):
+    @jwt_required()
+    def post(self):
         try:
-            user = User.get_user(id=id)
-            if user:
+            if current_user:
                 json_data = request.get_json(force=True)
+                print(json_data)
                 validated_data = NewPasswordSchema().load(data=json_data)
-                if validated_data:
+                if current_user:
                     new_password = User.update_password(
-                        user.id, password=validated_data['password'])
+                        current_user.id, password=validated_data['password'])
                     if new_password:
                         return {
                             "status": 200,
