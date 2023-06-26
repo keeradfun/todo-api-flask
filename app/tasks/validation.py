@@ -12,5 +12,5 @@ class TaskUpdateValidationSchema(Schema):
     title = fields.Str(required=False, validate=validate.Length(min=3))
     description = fields.Str(required=False, validate=validate.Length(min=3))
     deadline = fields.DateTime(required=False)
-    status = fields.Str(required=False, validate=validate.ContainsOnly(
+    status = fields.Str(required=False, validate=validate.OneOf(
         ['PENDING', 'ONGOING', 'COMPLETED']))

@@ -1,6 +1,7 @@
 from app.database import db
 from sqlalchemy.sql import func
 from sqlalchemy import exc
+from sqlalchemy import delete
 
 
 class Tasks(db.Model):
@@ -52,18 +53,41 @@ class Tasks(db.Model):
 
     def delete_task(id, user_id):
         try:
-            task = Tasks.query.filter_by(
-                id=id, user__id=user_id).first().delete()
-            db.session.delete(task)
+            task = Tasks.query.filter_by(id=id, user=user_id).delete()
+            db.session.commit()
             return True
         except:
             return None
 
     def update_task(id, data):
         try:
-            task = Tasks.query.filter(id=id).update(
+            task = Tasks.query.filter_by(id=id).update(
                 data, synchronize_session=False)
             db.session.commit()
             return True
         except:
             return None
+
+    @classmethod
+    def filter_task(cls, data):
+        args = cls._filter_generator(data)
+        tasks = cls.query.filter(*args)
+        print(tasks)
+        if tasks:
+            return tasks
+        else:
+            return None
+
+    @classmethod
+    def _filter_generator(cls, data):
+        args = []
+        contains_fields = ['title', 'description']
+        exact_fields = ['deadline', 'status']
+
+        for key, value in data.items():
+            if key in exact_fields:
+                args.append(getattr(cls, key) == data[key])
+
+            if key in contains_fields:
+                args.append(getattr(cls, key).contains(data[key]))
+        return args

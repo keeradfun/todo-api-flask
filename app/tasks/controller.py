@@ -5,6 +5,7 @@ from .validation import TasksValidationSchema, TaskUpdateValidationSchema
 from marshmallow import ValidationError
 from flask import request
 from .serializer import TasksSchema
+from .utils import filter_generator
 
 
 class TaskCreate(Resource):
@@ -85,8 +86,7 @@ class AllTasks(Resource):
                 print(tasks)
                 serialized_task = []
                 for task in tasks:
-                    serialized_task.push(TasksSchema().dump(tasks))
-                print(serialized_task)
+                    serialized_task.append(TasksSchema().dump(task))
                 return {
                     "status": 200,
                     "data": {
@@ -110,10 +110,10 @@ class AllTasks(Resource):
 
 
 class DeleteTask(Resource):
-    @jwt_required
+    @jwt_required()
     def delete(self, id):
         if current_user:
-            task = Tasks.delete_task(user_id=current_user.id)
+            task = Tasks.delete_task(id=id, user_id=current_user.id)
             if task:
                 return {
                     "status": "200",
@@ -136,21 +136,62 @@ class DeleteTask(Resource):
 
 
 class UpdateTask(Resource):
-    @jwt_required
+    @jwt_required()
     def post(self, id):
-        json_data = request.get_json(force=True)
-        validated_data = TasksValidationSchema().load(data=json_data)
-        if validated_data:
-            update = Tasks.update_task(id, validated_data)
-            if update:
-                return {
-                    "status": 200,
-                    "message": "task updated successfully",
-                    "Code": "OK"
-                }
-            else:
-                return {
-                    "status": 400,
-                    "message": "Failed to update task",
-                    "code": "BAD_REQUEST"
-                }, 400
+        try:
+            json_data = request.get_json(force=True)
+            validated_data = TaskUpdateValidationSchema().load(data=json_data)
+            if validated_data:
+                update = Tasks.update_task(id, validated_data)
+                if update:
+                    return {
+                        "status": 200,
+                        "message": "task updated successfully",
+                        "Code": "OK"
+                    }, 200
+                else:
+                    return {
+                        "status": 400,
+                        "message": "Failed to update task",
+                        "code": "BAD_REQUEST"
+                    }, 400
+        except ValidationError as err:
+            return {
+                "status": 400,
+                "message": err.messages,
+                "code": "BAD_REQUEST"
+            }, 400
+
+
+class Filter(Resource):
+    @jwt_required()
+    def post(self):
+        try:
+            json_data = request.get_json(force=True)
+            validated_data = TaskUpdateValidationSchema().load(data=json_data)
+            if validated_data:
+                tasks = Tasks.filter_task(validated_data)
+                if tasks:
+                    serialized_task = []
+                    for task in tasks:
+                        serialized_task.append(TasksSchema().dump(task))
+                    return {
+                        "status": 200,
+                        "data": {
+                            "tasks": serialized_task
+                        },
+                        "code": "OK"
+                    }, 200
+                else:
+                    return {
+                        "status": 400,
+                        "message": "Invalid tasks",
+                        "code": "BAD_REQUEST"
+                    }, 400
+
+        except ValidationError as err:
+            return {
+                "status": 400,
+                "message": err.messages,
+                "code": "BAD_REQUEST"
+            }, 400
