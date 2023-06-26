@@ -32,7 +32,7 @@ class Tasks(db.Model):
 
     def get_task_by_id(id, user_id):
         try:
-            task = Tasks.query.filter_by(id=id, user__id=user_id).first()
+            task = Tasks.query.filter_by(id=id, user=user_id).first()
             if (task):
                 return task
             else:
@@ -40,20 +40,9 @@ class Tasks(db.Model):
         except:
             return None
 
-    def get_tasks_by_date(deadline, user_id):
-        try:
-            tasks = Tasks.query.filter_by(deadline=deadline, user__id=user_id)
-            if (tasks):
-                return tasks
-            else:
-                return None
-
-        except:
-            return None
-
     def get_all_tasks(user_id):
         try:
-            tasks = Tasks.query.filter(Tasks.id == id).all()
+            tasks = Tasks.query.filter_by(user=user_id).all()
             if (tasks):
                 return tasks
             else:

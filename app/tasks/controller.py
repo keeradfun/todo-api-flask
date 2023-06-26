@@ -17,12 +17,17 @@ class TaskCreate(Resource):
                 new_task = Tasks.create_task(
                     description=validated_data['description'],
                     title=validated_data['title'],
-                    deadline=validated_data['deadline']
+                    deadline=validated_data['deadline'],
+                    user=current_user
                 )
+                serialized_task = TasksSchema().dump(new_task)
                 if new_task:
                     return {
                         "status": 200,
                         "message": "task created successfully",
+                        "data": {
+                            "task": serialized_task
+                        },
                         "Code": "OK"
                     }
                 else:
@@ -59,37 +64,7 @@ class TaskFindById(Resource):
             else:
                 return {
                     "status": 400,
-                    "message": "Invalid user id",
-                    "code": "BAD_REQUEST"
-                }, 400
-        else:
-            return {
-                "status": 403,
-                "error": "Not Found",
-                "message": "You are not allowed to access resource",
-                "code": "UNAUTHORIZED"
-            }
-
-
-class TaskByDate(Resource):
-    @jwt_required
-    def get(self, date):
-        if current_user:
-            task = Tasks.get_tasks_by_date(
-                deadline=date, user_id=current_user.id)
-            if task:
-                serialized_task = TasksSchema().dump(task)
-                return {
-                    "status": 200,
-                    "data": {
-                        "task": serialized_task
-                    },
-                    "code": "OK"
-                }, 200
-            else:
-                return {
-                    "status": 400,
-                    "message": "Invalid user id",
+                    "message": "Invalid Task id",
                     "code": "BAD_REQUEST"
                 }, 400
         else:
@@ -102,12 +77,16 @@ class TaskByDate(Resource):
 
 
 class AllTasks(Resource):
-    @jwt_required
+    @jwt_required()
     def get(self):
         if current_user:
             tasks = Tasks.get_all_tasks(user_id=current_user.id)
             if tasks:
-                serialized_task = TasksSchema().dump(tasks)
+                print(tasks)
+                serialized_task = []
+                for task in tasks:
+                    serialized_task.push(TasksSchema().dump(tasks))
+                print(serialized_task)
                 return {
                     "status": 200,
                     "data": {
@@ -118,7 +97,7 @@ class AllTasks(Resource):
             else:
                 return {
                     "status": 400,
-                    "message": "Invalid user id",
+                    "message": "Invalid tasks",
                     "code": "BAD_REQUEST"
                 }, 400
         else:
