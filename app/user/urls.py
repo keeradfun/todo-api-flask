@@ -1,8 +1,7 @@
-from .controller import UserRegister, UserLogin, UserManager, PasswordUpdate
+from .controller import UsersManager, LoginManager, UserManager
 
 
 def define_urls(api):
-    api.add_resource(UserRegister, '/user/register')
-    api.add_resource(UserLogin, "/user/login")
-    api.add_resource(UserManager, "/user/profile")
-    api.add_resource(PasswordUpdate, "/user/new-password")
+    api.add_resource(UsersManager, '/users/')
+    api.add_resource(LoginManager, '/users/login')
+    api.add_resource(UserManager, '/user/<int:id>')

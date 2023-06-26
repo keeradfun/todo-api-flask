@@ -1,124 +1,182 @@
-from flask import request
+from flask import request, jsonify, abort
 from flask_restful import Resource
-from .validation import RegisterSchema, LoginSchema, NewPasswordSchema
+from .validation import UserCreateValidation, UserLoginValidation, NewPasswordValidation, UserUpdateValidation
 from marshmallow import ValidationError
 from .models import User
 from flask_jwt_extended import create_access_token, jwt_required, current_user
-from .serializer import UserSchema
+from .serializer import UserSerializer
+from app.user.utils import hash_password
 
 
-class UserRegister(Resource):
+class UsersManager(Resource):
     def post(self):
         try:
             json_data = request.get_json(force=True)
-            validated_data = RegisterSchema().load(data=json_data)
-            if validated_data:
-                new_user = User.create_user(
-                    username=validated_data['username'], email=validated_data['email'], password=validated_data['password'])
-                return {
-                    "status": 200,
-                    "message": new_user,
-                    "code": "OK"
-                }, 200
+            if json_data:
+                validated_data = UserCreateValidation().load(data=json_data)
+                if validated_data:
+                    user = User(email=validated_data['email'],
+                                username=validated_data['username'],
+                                password=hash_password(
+                                    validated_data['password'])
+                                )
+                    user.create()
+
+                    return jsonify({
+                        "status": True,
+                        "user": UserSerializer().dump(user)
+                    })
+
         except ValidationError as err:
             return {
-                "status": 400,
-                "message": err.messages,
-                "code": "BAD_REQUEST"
+                "status": False,
+                "message": err.messages
             }, 400
 
+    @jwt_required()
+    def get(self):
+        try:
+            users = User.findall()
+            if users:
+                serialized_data = []
+                for user in users:
+                    serialized_data.append(UserSerializer().dump(user))
 
-class UserLogin(Resource):
-    def post(self):
+                return {
+                    "status": True,
+                    "users": serialized_data
+                }
+        except Exception as e:
+            print(e)
+            abort(422)
+
+    @jwt_required()
+    def put(self):
         try:
             json_data = request.get_json(force=True)
-            validated_data = LoginSchema().load(data=json_data)
-            if validated_data:
-                authenticate = User.authenticate_user(
-                    email=validated_data['email'], password=validated_data['password'])
-                if authenticate:
-                    access_token = create_access_token(
-                        identity=authenticate)
-                    return {
-                        "status": 200,
-                        "data": {
-                            "token": access_token
-                        },
-                        "code": "OK"
-                    }, 200
-                else:
-                    return {
-                        "status": 403,
-                        "message": "Forbidden",
-                        "code": "Forbidden"
-                    }, 403
+            if json_data:
+                validated_data = NewPasswordValidation().load(data=json_data)
+                if validated_data:
+                    user = User.update_password(
+                        id=current_user.id, password=validated_data['password'])
 
-            else:
-                return {
-                    "status": 404,
-                    "message": "Oops something went wrong",
-                    "code": "OK"
-                }, 404
+                    return jsonify({
+                        "status": True,
+                        "message": "success"
+                    })
+
         except ValidationError as err:
             return {
-                "status": 400,
-                "message": err.messages,
-                "code": "BAD_REQUEST"
+                "status": False,
+                "message": err.messages
             }, 400
 
 
 class UserManager(Resource):
     @jwt_required()
-    def get(self):
-        if current_user:
-            serialized_user = UserSchema().dump(current_user)
-            return {
-                "status": 200,
-                "data": {
-                    "user": serialized_user
-                },
-                "code": "OK"
-            }, 200
-        else:
-            return {
-                "status": 400,
-                "message": "Invalid user id",
-                "code": "BAD_REQUEST"
-            }, 400
-
-
-class PasswordUpdate(Resource):
-    @jwt_required()
-    def post(self):
+    def get(self, id):
         try:
-            if current_user:
-                json_data = request.get_json(force=True)
-                print(json_data)
-                validated_data = NewPasswordSchema().load(data=json_data)
-                if current_user:
-                    new_password = User.update_password(
-                        current_user.id, password=validated_data['password'])
-                    if new_password:
+            user = User.findone(id=id)
+            if user:
+                serialized_user = UserSerializer().dump(user)
+                return {
+                    "status": True,
+                    "user": serialized_user
+                }
+            else:
+                return {
+                    "status": False,
+                    "message": "user not found"
+                }, 400
+        except:
+            abort(422)
+
+    @jwt_required()
+    def put(self, id):
+        try:
+            if not current_user.superadmin:
+                return {
+                    "status": False,
+                    "message": "Forbidden"
+                }, 403
+            json_data = request.get_json(force=True)
+            if json_data:
+                validated_data = UserUpdateValidation().load(data=json_data)
+                if validated_data:
+                    user = User.update(id, validated_data)
+                    if user:
+                        user = User.findone(id=id)
                         return {
-                            "status": 200,
-                            "message": "successfully changed the password",
-                            "code": "OK"
+                            "status": True,
+                            "user": UserSerializer().dump(user)
                         }, 200
                     else:
                         return {
-                            "status": 400,
-                            "message": "failed to change the password",
-                            "code": "BAD_REQUEST"
+                            "status": False,
+                            "message": "Invalid user id"
                         }, 400
-                else:
-                    return {
-                        "status": 404,
-                        "message": "Oops something went wrong",
-                        "code": "OK"
-                    }, 404
+
         except ValidationError as err:
             return {
-                "status": 400,
-                "message": err.messages,
-                "code": "BAD_REQUEST"
+                "status": False,
+                "message": err.messages
             }, 400
+
+    @jwt_required()
+    def delete(self, id):
+        try:
+            if not current_user.superadmin:
+                return {
+                    "status": False,
+                    "message": "FORBIDDEN"
+                }, 403
+            if current_user.id == id:
+                return {
+                    "status": False,
+                    "message": "can not delete your self"
+                }, 400
+            user = User.delete(id=id)
+            if user:
+                return {
+                    "status": True,
+                    "message": "success"
+                }, 200
+            else:
+                return {
+                    "status": False,
+                    "message": "Can not delete"
+                }, 400
+        except:
+            abort(422)
+
+
+class LoginManager(Resource):
+    def post(self):
+        try:
+            json_data = request.get_json(force=True)
+            if json_data:
+                validated_data = UserLoginValidation().load(data=json_data)
+                if validated_data:
+                    user = User.authenticate_user(
+                        email=validated_data['email'], password=validated_data['password'])
+                    if user:
+                        return {
+                            "status": True,
+                            "user": UserSerializer().dump(user),
+                            "token": create_access_token(identity=user)
+                        }, 200
+
+                    else:
+                        return {
+                            "status": False,
+                            "message": "Invalid email or password"
+                        }, 400
+
+        except ValidationError as err:
+            return {
+                "status": False,
+                "message": err.messages
+            }, 400
+
+        except:
+            return abort(422)

@@ -1,6 +1,7 @@
 from app.database import db
 from app.user.utils import hash_password, password_compare
 from sqlalchemy import exc
+from sqlalchemy import delete
 
 
 class User(db.Model):
@@ -9,37 +10,55 @@ class User(db.Model):
     username = db.Column(db.String(200), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     active = db.Column(db.Boolean, nullable=False, default=False)
+    superadmin = db.Column(db.Boolean, nullable=False, default=False)
 
-    @staticmethod
-    def create_user(username: str, email: str, password: str):
+    def create(self):
         try:
-            new_user = User(
-                username=username,
-                email=email,
-                password=hash_password(password),
-                active=False
-            )
-            db.session.add(new_user)
+            db.session.add(self)
             db.session.commit()
-            return "User created successfully"
-
+            return True
         except exc.SQLAlchemyError:
-            return "Something went wrong"
+            return None
 
-    def email_exist(email):
+    @classmethod
+    def findone(cls, id):
         try:
-            email_exist = User.query.filter_by(email=email).first()
+            user = cls.query.filter_by(id=id).first()
+            if user:
+                return user
+            else:
+                return None
+        except:
+            return None
+
+    @classmethod
+    def findall(cls):
+        try:
+            users = cls.query.filter()
+            if users:
+                return users
+            else:
+                return None
+        except:
+            return None
+
+    @classmethod
+    def email_exist(cls, email):
+        try:
+            email_exist = cls.query.filter_by(email=email).first()
             if email_exist is None:
                 return False
             else:
                 return True
 
         except exc.SQLAlchemyError:
-            return "something went wrong with email validation homeboy"
+            return None
 
-    def username_exist(username):
+    @classmethod
+    def username_exist(cls, username):
         try:
-            username_exist = User.query.filter_by(username=username).first()
+            username_exist = cls.query.filter_by(username=username).first()
+            print(username_exist)
             if username_exist is None:
                 return False
             else:
@@ -48,18 +67,10 @@ class User(db.Model):
         except exc.SQLAlchemyError:
             return "something went wrong username validation"
 
-    def validate_user(username, email):
+    @classmethod
+    def authenticate_user(cls, email, password):
         try:
-            if User.email_exist(email) and User.username_exist(username):
-                return True
-            else:
-                return False
-        except exc.SQLAlchemyError:
-            return "Something went wrong while validating"
-
-    def authenticate_user(email, password):
-        try:
-            user = User.query.filter_by(email=email).first()
+            user = cls.query.filter_by(email=email).first()
             if user:
                 compare = password_compare(user.password, password)
                 if compare:
@@ -71,21 +82,31 @@ class User(db.Model):
         except:
             return None
 
-    def get_user(id):
+    @classmethod
+    def update_password(cls, id, password):
         try:
-            user = User.query.filter_by(id=id).first()
-            if user:
-                return user
-            else:
-                return None
+            update = cls.query.filter_by(id=id).first()
+            update.password = hash_password(password)
+            db.session.commit()
+            return True
         except:
             return None
 
-    def update_password(id, password):
+    @classmethod
+    def update(cls, id, data):
         try:
-            update = User.query.filter_by(id=id).first()
-            update.password = hash_password(password)
+            update = cls.query.filter_by(id=id).update(
+                data, synchronize_session=False)
             db.session.commit()
-            return "Success"
+            return update
         except:
             return None
+
+    @classmethod
+    def delete(cls, id):
+        try:
+            delete = cls.query.filter_by(id=id).delete()
+            db.session.commit()
+            return True
+        except:
+            return False
