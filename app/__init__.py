@@ -62,7 +62,9 @@ def create_app(test_config=None):
     api = Api(app)
     ma = Marshmallow(app)
     from app.user.urls import define_urls as user_urls
+    from app.tasks.urls import define_urls as task_urls
     with app.app_context():
         user_urls(api)
+        task_urls(api)
 
     return app

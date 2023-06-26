@@ -1,11 +1,10 @@
-from flask import Flask, jsonify, request
-from flask_restful import reqparse, abort, Api, Resource
+from flask import request
+from flask_restful import Resource
 from .validation import RegisterSchema, LoginSchema, NewPasswordSchema
 from marshmallow import ValidationError
 from .models import User
-from flask_jwt_extended import create_access_token, jwt_required
+from flask_jwt_extended import create_access_token, jwt_required, current_user
 from .serializer import UserSchema
-from flask_jwt_extended import current_user
 
 
 class UserRegister(Resource):
