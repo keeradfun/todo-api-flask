@@ -15,6 +15,15 @@ This repository contains a Flask-based Todo App API that incorporates user authe
 - **RESTful API**: The API follows the principles of a RESTful architecture for easy integration and scalability.
 - **Data persistence**: Tasks and user information are stored in a database to maintain data integrity.
 
+## Techstack
+
+- **Python 3.11.2**: The programming language used for the project.
+- **Flask RestFul**: A lightweight and flexible web framework for building RESTful APIs in Python.
+- **SQLAlchemy**: A powerful and popular Object-Relational Mapping (ORM) library for Python, used for interacting with databases.
+- **Marshmallow**: A Python library used for object serialization/deserialization, including validation, and transforming complex data types to and from Python objects.
+- **Flask JWT Extended**: An extension for Flask that provides JSON Web Token (JWT) authentication support, allowing secure user authentication and authorization in the API.
+- **Bcrypt**: A password-hashing function/library used for secure password storage and authentication.
+
 # Dev Setup
 
 ## Windows
