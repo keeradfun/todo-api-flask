@@ -77,14 +77,14 @@ Authorization: Bearer <jwt_token>
 
 ## Users
 
-** Base Url ** - https://yourdomain.com/users
+**Base Url** - https://yourdomain.com/users
 
 ### Create
 
-- ** End Point ** : '/create'
-- ** Method ** : 'POST'
-- ** Description ** : Create/Register a new user account.
-- ** Request Body ** :
+- **End Point** : '/create'
+- **Method** : 'POST'
+- **Description** : Create/Register a new user account.
+- **Request Body** :
 
   ```
   {
@@ -94,14 +94,14 @@ Authorization: Bearer <jwt_token>
   }
   ```
 
-** Success Response ** -
+**Success Response** -
 
-```
-{
+    ```
+    {
     "status": true,
     "user": {
         "id": 1
     }
-}
+    }
 
-```
+    ```
