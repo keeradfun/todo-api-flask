@@ -51,7 +51,10 @@ This repository contains a Flask-based Todo App API that incorporates user authe
    python -m pip install -r requirements.txt
    ```
 4. Rename/Copy Sample Environment File:
-   `cp sample-env .env`
+
+   ```
+   cp sample-env .env
+   ```
 
 5. execute - flask --app app --debug run to run as development mode
 
