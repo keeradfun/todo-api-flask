@@ -3,7 +3,7 @@ from marshmallow import Schema, fields, validate, ValidationError, validates, va
 from flask_marshmallow import Marshmallow
 
 
-class RegisterSchema(Schema):
+class UserCreateValidation(Schema):
     email = fields.Email(required=True, validate=validate.Length(min=3))
     username = fields.Str(required=True, validate=validate.Length(min=3))
     password = fields.Str(required=True, validate=validate.Length(min=8))
@@ -19,7 +19,7 @@ class RegisterSchema(Schema):
             raise ValidationError("Username already taken")
 
 
-class LoginSchema(Schema):
+class UserLoginValidation(Schema):
     email = fields.Email(required=True, validate=validate.Length(min=3))
     password = fields.Str(required=True, validate=validate.Length(min=8))
 
@@ -29,7 +29,7 @@ class LoginSchema(Schema):
             raise ValidationError("Email does not exist")
 
 
-class NewPasswordSchema(Schema):
+class NewPasswordValidation(Schema):
     password = fields.Str(required=True, validate=validate.Length(min=8))
     password2 = fields.Str(required=True, validate=validate.Length(min=8))
 
@@ -37,3 +37,10 @@ class NewPasswordSchema(Schema):
     def validate_passwords(self, data, **kwargs):
         if data['password'] != data['password2']:
             raise ValidationError("Password does not match")
+
+
+class UserUpdateValidation(Schema):
+    email = fields.Email(required=False, validate=validate.Length(min=3))
+    username = fields.Str(required=False, validate=validate.Length(min=3))
+    active = fields.Bool(required=False)
+    superadmin = fields.Bool(required=False)

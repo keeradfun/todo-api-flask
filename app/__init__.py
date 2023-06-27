@@ -1,13 +1,12 @@
 import os
 from flask import Flask
 from decouple import config
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from .database import db
 from flask_restful import Api
-from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_jwt_extended import JWTManager
+from marshmallow.exceptions import ValidationError
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -54,8 +53,7 @@ def create_app(test_config=None):
 
         @jwt.user_lookup_loader
         def user_lookup_callback(_jwt_header, jwt_data):
-            user = User.get_user(id=jwt_data["sub"])
-            print(user)
+            user = User.findone(id=jwt_data["sub"])
             return user
 
     # importing api urls
