@@ -94,14 +94,14 @@ Authorization: Bearer <jwt_token>
   }
   ```
 
-**Success Response** -
+- **Success Response** -
 
-    ```
-    {
-        "status": true,
-        "user": {
-            "id": 1
-        }
-    }
+  ```
+  {
+      "status": true,
+      "user": {
+          "id": 1
+      }
+  }
 
-    ```
+  ```
