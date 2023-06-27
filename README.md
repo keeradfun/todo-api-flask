@@ -88,9 +88,9 @@ Authorization: Bearer <jwt_token>
 
   ```
   {
-  "username" : "tommy",
-  "email" : "tommy@domain.com",
-  "password" : "supersecretpassword"
+    "username" : "tommy",
+    "email" : "tommy@domain.com",
+    "password" : "supersecretpassword"
   }
   ```
 
@@ -98,10 +98,10 @@ Authorization: Bearer <jwt_token>
 
     ```
     {
-    "status": true,
-    "user": {
-        "id": 1
-    }
+        "status": true,
+        "user": {
+            "id": 1
+        }
     }
 
     ```
