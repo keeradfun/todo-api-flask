@@ -30,19 +30,20 @@ This repository contains a Flask-based Todo App API that incorporates user authe
 1. Clone Repository
    `https://github.com/keeradfun/todo-api-flask.git`
 2. Create virtual environment and activate
+
    - Linux :
 
-```
-python -m venv env
-source env/bin/activate
-```
+   ```
+   python -m venv env
+   source env/bin/activate
+   ```
 
-- Windows :
+   - Windows :
 
-```
-python -m venv env
-env\Script\activate.bat
-```
+   ```
+   python -m venv env
+   env\Script\activate.bat
+   ```
 
 3. Go to project root and install all the requirements from requirements.txt
    ```
