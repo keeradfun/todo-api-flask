@@ -56,7 +56,13 @@ This repository contains a Flask-based Todo App API that incorporates user authe
    cp sample-env .env
    ```
 
-5. execute - flask --app app --debug run to run as development mode
+5. Edit the Environment File:
+   Open the .env file in a text editor and update it with the appropriate settings for your environment, such as database connection details or API configurations.
+
+6. Run the Development Server:
+   ```
+    flask --app app --debug run
+   ```
 
 ## Windows
 
