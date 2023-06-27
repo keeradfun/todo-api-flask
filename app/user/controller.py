@@ -1,4 +1,4 @@
-from flask import request, jsonify, abort
+from flask import request, abort
 from flask_restful import Resource
 from .validation import UserCreateValidation, UserLoginValidation, NewPasswordValidation, UserUpdateValidation
 from marshmallow import ValidationError
@@ -22,10 +22,10 @@ class UsersManager(Resource):
                                 )
                     user.create()
 
-                    return jsonify({
+                    return {
                         "status": True,
                         "user": UserSerializer().dump(user)
-                    })
+                    }, 200
 
         except ValidationError as err:
             return {
@@ -45,9 +45,8 @@ class UsersManager(Resource):
                 return {
                     "status": True,
                     "users": serialized_data
-                }
+                }, 200
         except Exception as e:
-            print(e)
             abort(422)
 
     @jwt_required()
@@ -57,13 +56,13 @@ class UsersManager(Resource):
             if json_data:
                 validated_data = NewPasswordValidation().load(data=json_data)
                 if validated_data:
-                    user = User.update_password(
+                    User.update_password(
                         id=current_user.id, password=validated_data['password'])
 
-                    return jsonify({
+                    return {
                         "status": True,
                         "message": "success"
-                    })
+                    }, 200
 
         except ValidationError as err:
             return {

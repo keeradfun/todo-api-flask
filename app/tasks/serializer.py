@@ -1,8 +1,8 @@
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from .models import Tasks
 
 
-class TasksSchema(SQLAlchemyAutoSchema):
+class TaskSerializer(SQLAlchemyAutoSchema):
     class Meta:
         model = Tasks
         load_instance = True

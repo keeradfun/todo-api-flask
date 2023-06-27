@@ -1,12 +1,10 @@
-from flask import request, jsonify, abort
+from flask import request, abort
 from .models import Tasks
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, current_user
-from .validation import TasksValidationSchema, TaskUpdateValidationSchema
+from .validation import TasksCreateValidation, TaskFilterValidation, TaskUpdateValidation
 from marshmallow import ValidationError
-from flask import request
-from .serializer import TasksSchema
-from .utils import filter_generator
+from .serializer import TaskSerializer
 
 
 class TasksManager(Resource):
@@ -14,7 +12,7 @@ class TasksManager(Resource):
     def post(self):
         try:
             json_data = request.get_json(force=True)
-            validated_data = TasksValidationSchema().load(data=json_data)
+            validated_data = TasksCreateValidation().load(data=json_data)
             if validated_data:
                 new_task = Tasks(
                     user=current_user.id,
@@ -27,7 +25,7 @@ class TasksManager(Resource):
                 if new_task:
                     return {
                         "status": True,
-                        "task": TasksSchema().dump(new_task)
+                        "task": TaskSerializer().dump(new_task)
                     }, 200
                 else:
                     return {
@@ -47,14 +45,13 @@ class TasksManager(Resource):
             if tasks:
                 serialized_data = []
                 for task in tasks:
-                    serialized_data.append(TasksSchema().dump(task))
+                    serialized_data.append(TaskSerializer().dump(task))
 
                 return {
                     "status": True,
                     "tasks": serialized_data
-                }
+                }, 200
         except Exception as e:
-            print(e)
             abort(422)
 
 
@@ -63,13 +60,13 @@ class Filter(Resource):
     def post(self):
         try:
             json_data = request.get_json(force=True)
-            validated_data = TaskUpdateValidationSchema().load(data=json_data)
+            validated_data = TaskFilterValidation().load(data=json_data)
             if validated_data:
                 tasks = Tasks.filter_task(validated_data)
                 if tasks:
                     serialized_task = []
                     for task in tasks:
-                        serialized_task.append(TasksSchema().dump(task))
+                        serialized_task.append(TaskSerializer().dump(task))
                     return {
                         "status": True,
                         "tasks": serialized_task,
@@ -82,9 +79,8 @@ class Filter(Resource):
 
         except ValidationError as err:
             return {
-                "status": 400,
-                "message": err.messages,
-                "code": "BAD_REQUEST"
+                "status": False,
+                "message": err.messages
             }, 400
 
 
@@ -94,7 +90,7 @@ class TaskManager(Resource):
         try:
             task = Tasks.findone(id=id, user_id=current_user.id)
             if task:
-                serialized_task = TasksSchema().dump(task)
+                serialized_task = TaskSerializer().dump(task)
                 return {
                     "status": True,
                     "user": serialized_task
@@ -112,14 +108,14 @@ class TaskManager(Resource):
         try:
             json_data = request.get_json(force=True)
             if json_data:
-                validated_data = TaskUpdateValidationSchema().load(data=json_data)
+                validated_data = TaskUpdateValidation().load(data=json_data)
                 if validated_data:
                     task = Tasks.update(id, current_user.id, validated_data)
                     if task:
                         task = Tasks.findone(id=id, user_id=current_user.id)
                         return {
                             "status": True,
-                            "user": TasksSchema().dump(task)
+                            "user": TaskSerializer().dump(task)
                         }, 200
                     else:
                         return {
