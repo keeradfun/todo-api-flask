@@ -81,18 +81,18 @@ Authorization: Bearer <jwt_token>
 
 ### Create
 
-** End Point ** - '/create'
-** Method ** - 'POST'
-** Description ** - Create/Register a new user account.
-** Request Body ** -
+- ** End Point ** : '/create'
+- ** Method ** : 'POST'
+- ** Description ** : Create/Register a new user account.
+- ** Request Body ** :
 
-```
-{
-    "username" : "tommy",
-    "email" : "tommy@domain.com",
-    "password" : "supersecretpassword"
-}
-```
+  ```
+  {
+  "username" : "tommy",
+  "email" : "tommy@domain.com",
+  "password" : "supersecretpassword"
+  }
+  ```
 
 ** Success Response ** -
 
