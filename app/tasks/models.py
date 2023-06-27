@@ -15,25 +15,18 @@ class Tasks(db.Model):
                            server_default=func.now())
     updated_at = db.Column(db.DateTime(timezone=True), onupdate=func.now())
 
-    @staticmethod
-    def create_task(title: str, description: str, deadline, user):
+    def create(self):
         try:
-            new_task = Tasks(
-                user=user.id,
-                title=title,
-                description=description,
-                deadline=deadline,
-                status="PENDING"
-            )
-            db.session.add(new_task)
+            db.session.add(self)
             db.session.commit()
-            return new_task
+            return True
         except exc.SQLAlchemyError:
             return "Something went wrong"
 
-    def get_task_by_id(id, user_id):
+    @classmethod
+    def findone(cls, id, user_id):
         try:
-            task = Tasks.query.filter_by(id=id, user=user_id).first()
+            task = cls.query.filter_by(id=id, user=user_id).first()
             if (task):
                 return task
             else:
@@ -41,7 +34,8 @@ class Tasks(db.Model):
         except:
             return None
 
-    def get_all_tasks(user_id):
+    @classmethod
+    def findall(cls, user_id):
         try:
             tasks = Tasks.query.filter_by(user=user_id).all()
             if (tasks):
@@ -51,18 +45,20 @@ class Tasks(db.Model):
         except:
             return None
 
-    def delete_task(id, user_id):
+    @classmethod
+    def update(cls, id, user_id, data):
         try:
-            task = Tasks.query.filter_by(id=id, user=user_id).delete()
-            db.session.commit()
-            return True
-        except:
-            return None
-
-    def update_task(id, data):
-        try:
-            task = Tasks.query.filter_by(id=id).update(
+            task = Tasks.query.filter_by(id=id, user=user_id).update(
                 data, synchronize_session=False)
+            db.session.commit()
+            return task
+        except:
+            return task
+
+    @classmethod
+    def delete(cls, id, user_id):
+        try:
+            Tasks.query.filter_by(id=id, user=user_id).delete()
             db.session.commit()
             return True
         except:
