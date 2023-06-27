@@ -1,7 +1,6 @@
 from app.database import db
 from sqlalchemy.sql import func
 from sqlalchemy import exc
-from sqlalchemy import delete
 
 
 class Tasks(db.Model):
