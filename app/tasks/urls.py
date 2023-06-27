@@ -1,10 +1,7 @@
-from .controller import TaskCreate, TaskFindById, AllTasks, UpdateTask, DeleteTask, Filter
+from .controller import TasksManager, TaskManager, Filter
 
 
 def define_urls(api):
-    api.add_resource(TaskCreate, '/task/create')
-    api.add_resource(TaskFindById, '/task/find/<int:id>')
-    api.add_resource(AllTasks, '/task/find-all')
-    api.add_resource(UpdateTask, '/task/update/<int:id>')
-    api.add_resource(DeleteTask, '/task/delete/<int:id>')
-    api.add_resource(Filter, '/task/filter')
+    api.add_resource(TasksManager, '/tasks/')
+    api.add_resource(Filter, '/tasks/filter')
+    api.add_resource(TaskManager, '/task/<int:id>')

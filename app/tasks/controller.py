@@ -1,3 +1,4 @@
+from flask import request, jsonify, abort
 from .models import Tasks
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, current_user
@@ -8,159 +9,53 @@ from .serializer import TasksSchema
 from .utils import filter_generator
 
 
-class TaskCreate(Resource):
+class TasksManager(Resource):
     @jwt_required()
     def post(self):
         try:
             json_data = request.get_json(force=True)
             validated_data = TasksValidationSchema().load(data=json_data)
             if validated_data:
-                new_task = Tasks.create_task(
-                    description=validated_data['description'],
+                new_task = Tasks(
+                    user=current_user.id,
                     title=validated_data['title'],
+                    description=validated_data['description'],
                     deadline=validated_data['deadline'],
-                    user=current_user
+                    status="PENDING"
                 )
-                serialized_task = TasksSchema().dump(new_task)
+                new_task.create()
                 if new_task:
                     return {
-                        "status": 200,
-                        "message": "task created successfully",
-                        "data": {
-                            "task": serialized_task
-                        },
-                        "Code": "OK"
-                    }
-                else:
-                    return {
-                        "status": 400,
-                        "message": "failed to create task",
-                        "code": "BAD_REQUEST"
-                    }, 400
-        except ValidationError as err:
-            return {
-                "status": 400,
-                "message": err.messages,
-                "code": "BAD_REQUEST"
-            }, 400
-        return {
-            "status": "success"
-        }
-
-
-class TaskFindById(Resource):
-    @jwt_required()
-    def get(self, id):
-        if current_user:
-            task = Tasks.get_task_by_id(id=id, user_id=current_user.id)
-            if task:
-                serialized_task = TasksSchema().dump(task)
-                return {
-                    "status": 200,
-                    "data": {
-                        "task": serialized_task
-                    },
-                    "code": "OK"
-                }, 200
-            else:
-                return {
-                    "status": 400,
-                    "message": "Invalid Task id",
-                    "code": "BAD_REQUEST"
-                }, 400
-        else:
-            return {
-                "status": 403,
-                "error": "Not Found",
-                "message": "You are not allowed to access resource",
-                "code": "UNAUTHORIZED"
-            }
-
-
-class AllTasks(Resource):
-    @jwt_required()
-    def get(self):
-        if current_user:
-            tasks = Tasks.get_all_tasks(user_id=current_user.id)
-            if tasks:
-                print(tasks)
-                serialized_task = []
-                for task in tasks:
-                    serialized_task.append(TasksSchema().dump(task))
-                return {
-                    "status": 200,
-                    "data": {
-                        "tasks": serialized_task
-                    },
-                    "code": "OK"
-                }, 200
-            else:
-                return {
-                    "status": 400,
-                    "message": "Invalid tasks",
-                    "code": "BAD_REQUEST"
-                }, 400
-        else:
-            return {
-                "status": 403,
-                "error": "Not Found",
-                "message": "You are not allowed to access resource",
-                "code": "UNAUTHORIZED"
-            }
-
-
-class DeleteTask(Resource):
-    @jwt_required()
-    def delete(self, id):
-        if current_user:
-            task = Tasks.delete_task(id=id, user_id=current_user.id)
-            if task:
-                return {
-                    "status": "200",
-                    "message": "Successfully deleted the task",
-                    "code": "OK"
-                }
-            else:
-                return {
-                    "status": 400,
-                    "message": "Invalid task id",
-                    "code": "BAD_REQUEST"
-                }, 400
-        else:
-            return {
-                "status": 403,
-                "error": "Not Found",
-                "message": "You are not allowed to access resource",
-                "code": "UNAUTHORIZED"
-            }
-
-
-class UpdateTask(Resource):
-    @jwt_required()
-    def post(self, id):
-        try:
-            json_data = request.get_json(force=True)
-            validated_data = TaskUpdateValidationSchema().load(data=json_data)
-            if validated_data:
-                update = Tasks.update_task(id, validated_data)
-                if update:
-                    return {
-                        "status": 200,
-                        "message": "task updated successfully",
-                        "Code": "OK"
+                        "status": True,
+                        "task": TasksSchema().dump(new_task)
                     }, 200
                 else:
                     return {
-                        "status": 400,
-                        "message": "Failed to update task",
-                        "code": "BAD_REQUEST"
+                        "status": False,
+                        "message": "failed to create task"
                     }, 400
         except ValidationError as err:
             return {
-                "status": 400,
-                "message": err.messages,
-                "code": "BAD_REQUEST"
+                "status": False,
+                "message": err.messages
             }, 400
+
+    @jwt_required()
+    def get(self):
+        try:
+            tasks = Tasks.findall(user_id=current_user.id)
+            if tasks:
+                serialized_data = []
+                for task in tasks:
+                    serialized_data.append(TasksSchema().dump(task))
+
+                return {
+                    "status": True,
+                    "tasks": serialized_data
+                }
+        except Exception as e:
+            print(e)
+            abort(422)
 
 
 class Filter(Resource):
@@ -176,17 +71,13 @@ class Filter(Resource):
                     for task in tasks:
                         serialized_task.append(TasksSchema().dump(task))
                     return {
-                        "status": 200,
-                        "data": {
-                            "tasks": serialized_task
-                        },
-                        "code": "OK"
+                        "status": True,
+                        "tasks": serialized_task,
                     }, 200
                 else:
                     return {
-                        "status": 400,
-                        "message": "Invalid tasks",
-                        "code": "BAD_REQUEST"
+                        "status": False,
+                        "message": "No tasks found"
                     }, 400
 
         except ValidationError as err:
@@ -195,3 +86,66 @@ class Filter(Resource):
                 "message": err.messages,
                 "code": "BAD_REQUEST"
             }, 400
+
+
+class TaskManager(Resource):
+    @jwt_required()
+    def get(self, id):
+        try:
+            task = Tasks.findone(id=id, user_id=current_user.id)
+            if task:
+                serialized_task = TasksSchema().dump(task)
+                return {
+                    "status": True,
+                    "user": serialized_task
+                }
+            else:
+                return {
+                    "status": False,
+                    "message": "user not found"
+                }, 400
+        except:
+            abort(422)
+
+    @jwt_required()
+    def put(self, id):
+        try:
+            json_data = request.get_json(force=True)
+            if json_data:
+                validated_data = TaskUpdateValidationSchema().load(data=json_data)
+                if validated_data:
+                    task = Tasks.update(id, current_user.id, validated_data)
+                    if task:
+                        task = Tasks.findone(id=id, user_id=current_user.id)
+                        return {
+                            "status": True,
+                            "user": TasksSchema().dump(task)
+                        }, 200
+                    else:
+                        return {
+                            "status": False,
+                            "message": "Invalid user id"
+                        }, 400
+
+        except ValidationError as err:
+            return {
+                "status": False,
+                "message": err.messages
+            }, 400
+
+    @jwt_required()
+    def delete(self, id):
+        try:
+            task = Tasks.delete(id=id, user_id=current_user.id)
+            if task:
+                return {
+                    "status": True,
+                    "message": "success"
+                }, 200
+            else:
+                return {
+                    "status": False,
+                    "message": "Can not delete"
+                }, 400
+        except:
+            abort(422)
