@@ -63,13 +63,45 @@ This repository contains a Flask-based Todo App API that incorporates user authe
    ```
     flask --app app --debug run
    ```
+   This command will start the development server for the Todo API Flask application.
 
-## Windows
+# Api Reference
+
+## Authentication
+
+The API requires authentication for certain endpoints. To authenticate, include the JWT token in the Authorization header of the API requests. You can generate an jwt token using User Login endpoint.
 
 ```
-install python
-python -m pip install virtualenv
-python -m venv env
-env/Scripts/activate.bat #to activate virtual env
-flask --app app --debug run
+Authorization: Bearer <jwt_token>
+```
+
+## Users
+
+** Base Url ** - https://yourdomain.com/users
+
+### Create
+
+** End Point ** - '/create'
+** Method ** - 'POST'
+** Description ** - Create/Register a new user account.
+** Request Body ** -
+
+```
+{
+    "username" : "tommy",
+    "email" : "tommy@domain.com",
+    "password" : "supersecretpassword"
+}
+```
+
+** Success Response ** -
+
+```
+{
+    "status": true,
+    "user": {
+        "id": 1
+    }
+}
+
 ```
